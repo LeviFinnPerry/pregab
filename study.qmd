@@ -1,8 +1,216 @@
 # Steps
 
+## Data Preparation
+
+```{python}
+import json
+import pandas as pd
+```
+
 1.  Download the file as a json format.
 
+    ```{python}
+    with open('NCT00830167.json', 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    ```
+
 2.  Process the content to break the study down into sections.
+
+    Study Overview
+
+    ```{python}
+    study_info = {
+        'nct_id': data['protocolSection']['identificationModule']['nctId'],
+        'brief_title': data['protocolSection']['identificationModule']['briefTitle'],
+        'enrollment': data['protocolSection']['designModule']['enrollmentInfo']['count'],
+        'phase': data['protocolSection']['designModule']['phases'][0],
+        'arms': [arm['label'] for arm in data['protocolSection']['armsInterventionsModule']['armGroups']]
+    }
+    study_df = pd.DataFrame([study_info])
+    study_df.to_csv('study_overview.csv', index=False)
+    ```
+
+    Baseline Characteristics
+
+    ```{python}
+    baseline_measures = []
+    baseline_module = data['resultsSection'].get('baselineCharacteristicsModule', {})
+    for measure in baseline_module.get('measures', []):
+        measure_title = measure.get('title', 'Unknown Measure')
+        for cls in measure.get('classes', []):
+            class_title = cls.get('title', 'Unknown Class')
+            for cat in cls.get('categories', []):
+                # Use 'title' if exists, otherwise use class_title or 'N/A'
+                cat_title = cat.get('title', class_title if 'title' in cls else 'N/A')
+                row = {
+                    'measure': measure_title, 
+                    'class': class_title,
+                    'category': cat_title
+                }
+                for m in cat.get('measurements', []):
+                    row[f"{m['groupId']}_value"] = m.get('value', 0)
+                baseline_measures.append(row)
+
+    baseline_df = pd.DataFrame(baseline_measures)
+    baseline_df.to_csv('baseline_characteristics.csv', index=False)
+    ```
+
+    Efficacy Outcomes
+
+    ```{python}
+    outcomes = []
+    outcome_module = data.get('resultsSection', {}).get('outcomeMeasuresModule', {}).get('outcomeMeasures', {})
+    for outcome in outcome_module:
+        row = {
+            'outcome_type': outcome.get('type', 'Other'),
+            'title': outcome.get('title', 'N/A')[:120],
+            'time_frame': outcome.get('timeFrame', 'N/A')
+        }
+        
+        # Extract from ALL found measurements
+        for cls in outcome.get('classes', []):
+            for cat in cls.get('categories', []):
+                for m in cat.get('measurements', []):
+                    group_id = m['groupId']
+                    param_type = m.get('paramType', 'Mean')
+                    row[f"{group_id}_{param_type}_value"] = m.get('value', 0)
+                    row[f"{group_id}_{param_type}_spread"] = m.get('spread', 0)
+                    
+                    
+        outcomes.append(row)
+        
+    outcomes_df = pd.DataFrame(outcomes)
+    outcomes_df.to_csv('efficacy_outcomes.csv', index=False)
+    ```
+
+    Participant Flow
+
+    ```{python}
+    flow_data = []
+    participant_flow = data.get('resultsSection', {}).get('participantFlowModule', {})
+    periods = participant_flow.get('periods', [])
+    if periods:
+        for milestone in periods[0].get('milestones', []):
+            for ach in milestone.get('achievements', []):
+                flow_data.append({
+                    'milestone': milestone.get('type', 'N/A'),
+                    'group': ach.get('groupId'),
+                    'n_subjects': ach.get('numSubjects')
+                })
+    flow_df = pd.DataFrame(flow_data)
+    flow_df.to_csv('participant_flow.csv', index=False)
+    ```
+
+    Adverse Events
+
+    ```{python}
+    adverse_events = []
+    adverse_module = data.get('resultsSection', {}).get('adverseEventsModule', {})
+    for event_list in ['seriousEvents', 'otherEvents']:
+        events = adverse_module.get(event_list, [])
+        for event in events:
+            row = {
+                'term': event.get('term', 'N/A'),
+                'organ_system': event.get('organSystem', 'N/A'),
+                'event_type': event_list.replace('Events', '')
+            }
+            for stat in event.get('stats', []):
+                group_id = stat['groupId']
+                row[f"{group_id}_affected"] = stat.get('numAffected', 0)
+                row[f"{group_id}_at_risk"] = stat.get('numAtRisk', 0)
+            adverse_events.append(row)
+    adverse_df = pd.DataFrame(adverse_events)
+    adverse_df.to_csv('adverse_events.csv', index=False)
+    ```
+
+3.  Load the data and inspect for cleaning
+
+    Inspection Function
+
+    ```{python}
+    def print_overview(df):
+        print("Overview:")
+        print(df.head())
+        print(df.info())
+        print(df.describe())
+        print(df.dtypes)
+    ```
+
+    Study Overview
+
+    ```{python}
+    study_df = pd.read_csv('study_overview.csv')
+    print_overview(study_df)
+    ```
+
+    Baseline Characteristics
+
+    ```{python}
+    baseline_df = pd.read_csv('baseline_characteristics.csv')
+
+    # Rename columns for groups
+    baseline_df.rename(columns={'BG000_value':'n_placebo',
+                                'BG001_value':'n_pregab',
+                                'BG002_value':'n_total'}, inplace=True)
+
+    print_overview(baseline_df)
+    ```
+
+    Efficacy Outcomes
+
+    ```{python}
+    outcomes_df = pd.read_csv('efficacy_outcomes.csv')
+
+    # Rename columns for groups
+    outcomes_df.rename(columns={'OG000_Mean_value':'placebo_mean_change',
+                                'OG001_Mean_value':'pregab_mean_change',
+                                'OG000_Mean_spread':'placebo_sd',
+                                'OG001_Mean_spread':'pregab_sd'}, inplace=True)
+
+    # Calculate difference in means
+    outcomes_df['mean_difference'] = outcomes_df['pregab_mean_change'] - outcomes_df['placebo_mean_change']
+    # Calculate pooled standard deviation
+    outcomes_df['pooled_sd'] = ((outcomes_df['placebo_sd'] ** 2 + outcomes_df['pregab_sd'] ** 2) / 2) ** 0.5
+    # Calculate effect size (Cohen's d)
+    outcomes_df['effect_size'] = outcomes_df['mean_difference'] / outcomes_df['pooled_sd']
+    # Calculate relative difference
+    outcomes_df['relative_difference'] = outcomes_df['mean_difference'] / outcomes_df['placebo_mean_change']
+
+    print_overview(outcomes_df)
+    ```
+
+    Participant Flow
+
+    ```{python}
+    flow_df = pd.read_csv('participant_flow.csv')
+    print_overview(flow_df)
+    ```
+
+    Adverse Events
+
+    ```{python}
+    adverse_df = pd.read_csv('adverse_events.csv')
+
+    # Rename columns for groups
+    adverse_df.rename(columns={'EG000_affected':'n_placebo_affected',
+                                'EG000_at_risk':'n_placebo_at_risk',
+                                'EG001_affected':'n_pregab_affected',
+                                'EG001_at_risk':'n_pregab_at_risk'}, inplace=True)
+
+    # Calculate risk
+    adverse_df['risk_placebo'] = adverse_df['n_placebo_affected'] / adverse_df['n_placebo_at_risk']
+    adverse_df['risk_pregab'] = adverse_df['n_pregab_affected'] / adverse_df['n_pregab_at_risk']
+    # Calculate risk difference
+    adverse_df['risk_difference'] = adverse_df['risk_pregab'] - adverse_df['risk_placebo']
+    # Calculate relative risk
+    adverse_df['relative_risk'] = adverse_df['risk_pregab'] / adverse_df['risk_placebo']
+    # Calculate odds ratio
+    adverse_df['odds_placebo'] = adverse_df['n_placebo_affected'] / (adverse_df['n_placebo_at_risk'] - adverse_df['n_placebo_affected'])
+    adverse_df['odds_pregab'] = adverse_df['n_pregab_affected'] / (adverse_df['n_pregab_at_risk'] - adverse_df['n_pregab_affected'])
+    adverse_df['odds_ratio'] = adverse_df['odds_pregab'] / adverse_df['odds_placebo']
+
+    print_overview(adverse_df)
+    ```
 
     Files:
 
@@ -18,26 +226,30 @@
 
     -   baseline_characteristics.csv
 
-        | Col         | Type    | Description             |
-        |-------------|---------|-------------------------|
-        | measure     | String  | Characteristic measured |
-        | class       | String  | Grouping                |
-        | category    | String  | Subgroup                |
-        | BG000_value | Integer | Placebo arm value       |
-        | BG001_value | Integer | Pregabilin arm value    |
-        | BG002_value | Integer | Total of other values   |
+        | Col       | Type    | Description             |
+        |-----------|---------|-------------------------|
+        | measure   | String  | Characteristic measured |
+        | class     | String  | Grouping                |
+        | category  | String  | Subgroup                |
+        | n_placebo | Integer | Placebo group size      |
+        | n_pregab  | Integer | Pregabalin group size   |
+        | n_total   | Integer | Total both groups       |
 
     -   efficacy_outcomes.csv
 
-        | Col               | Type   | Description            |
-        |-------------------|--------|------------------------|
-        | outcome_type      | String | Primary/Secondary      |
-        | title             | String | Outcome name           |
-        | time_frame        | String | Assessment period      |
-        | OG000_Mean_value  | Float  | Placebo mean change    |
-        | OG000_Mean_spread | Float  | Placebo spread         |
-        | OG001_Mean_value  | Float  | Pregabalin mean change |
-        | OG001_Mean_spread | Float  | Pregabalin spread      |
+        | Col                 | Type   | Description            |
+        |---------------------|--------|------------------------|
+        | outcome_type        | String | Primary/Secondary      |
+        | title               | String | Outcome name           |
+        | time_frame          | String | Assessment period      |
+        | placebo_mean_change | Float  | Placebo mean change    |
+        | placebo_sd          | Float  | Placebo spread         |
+        | pregab_mean_change  | Float  | Pregabalin mean change |
+        | pregab_sd           | Float  | Pregabalin spread      |
+        | mean_difference     | Float  |                        |
+        | pooled_sd           | Float  |                        |
+        | effect_size         | Float  |                        |
+        | relative_difference | Float  |                        |
 
     -   participant_flow.csv
 
@@ -49,12 +261,19 @@
 
     -   adverse_events.csv
 
-        | Col            | Type    | Description            |
-        |----------------|---------|------------------------|
-        | term           | String  | Adverse event name     |
-        | organ_system   | String  | MedDRA system          |
-        | event_type     | String  | Serious/Other          |
-        | EG000_affected | Integer | Placebo cases          |
-        | EG000_at_risk  | Integer | Placebo denominator    |
-        | EG001_affected | Integer | Pregabalin cases       |
-        | EG001_at_risk  | Integer | Pregabalin denominator |
+        | Col                | Type    | Description            |
+        |--------------------|---------|------------------------|
+        | term               | String  | Adverse event name     |
+        | organ_system       | String  | MedDRA system          |
+        | event_type         | String  | Serious/Other          |
+        | n_placebo_affected | Integer | Placebo cases          |
+        | n_placebo_at_risk  | Integer | Placebo denominator    |
+        | n_pregab_affected  | Integer | Pregabalin cases       |
+        | n_pregab_at_risk   | Integer | Pregabalin denominator |
+        | risk_placebo       | Float   |                        |
+        | risk_pregab        | Float   |                        |
+        | risk_difference    | Float   |                        |
+        | relative_risk      | Float   |                        |
+        | odds_placebo       | Float   |                        |
+        | odds_pregab        | Float   |                        |
+        | odds_ratio         | Float   |                        |

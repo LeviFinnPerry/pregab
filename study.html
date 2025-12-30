@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -41,12 +75,776 @@ ul.task-list li input[type="checkbox"] {
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Steps</h1>
+</div>
 
 
 
+<div class="quarto-title-meta">
 
-<p>Download the file as a json format. Process the content to break the study down into sections. Files: study_overview.csv</p>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="data-preparation" class="level2">
+<h2 class="anchored" data-anchor-id="data-preparation">Data Preparation</h2>
+<div id="ca187af2" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="1">
+<li><p>Download the file as a json format.</p>
+<div id="3e7e3207" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'NCT00830167.json'</span>, <span class="st">'r'</span>, encoding<span class="op">=</span><span class="st">'utf-8'</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> json.load(<span class="bu">file</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></li>
+<li><p>Process the content to break the study down into sections.</p>
+<p>Study Overview</p>
+<div id="2dba09d8" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>study_info <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'nct_id'</span>: data[<span class="st">'protocolSection'</span>][<span class="st">'identificationModule'</span>][<span class="st">'nctId'</span>],</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'brief_title'</span>: data[<span class="st">'protocolSection'</span>][<span class="st">'identificationModule'</span>][<span class="st">'briefTitle'</span>],</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'enrollment'</span>: data[<span class="st">'protocolSection'</span>][<span class="st">'designModule'</span>][<span class="st">'enrollmentInfo'</span>][<span class="st">'count'</span>],</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'phase'</span>: data[<span class="st">'protocolSection'</span>][<span class="st">'designModule'</span>][<span class="st">'phases'</span>][<span class="dv">0</span>],</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'arms'</span>: [arm[<span class="st">'label'</span>] <span class="cf">for</span> arm <span class="kw">in</span> data[<span class="st">'protocolSection'</span>][<span class="st">'armsInterventionsModule'</span>][<span class="st">'armGroups'</span>]]</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>study_df <span class="op">=</span> pd.DataFrame([study_info])</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>study_df.to_csv(<span class="st">'study_overview.csv'</span>, index<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Baseline Characteristics</p>
+<div id="a363ffb9" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>baseline_measures <span class="op">=</span> []</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>baseline_module <span class="op">=</span> data[<span class="st">'resultsSection'</span>].get(<span class="st">'baselineCharacteristicsModule'</span>, {})</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> measure <span class="kw">in</span> baseline_module.get(<span class="st">'measures'</span>, []):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    measure_title <span class="op">=</span> measure.get(<span class="st">'title'</span>, <span class="st">'Unknown Measure'</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> cls <span class="kw">in</span> measure.get(<span class="st">'classes'</span>, []):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        class_title <span class="op">=</span> cls.get(<span class="st">'title'</span>, <span class="st">'Unknown Class'</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> cat <span class="kw">in</span> cls.get(<span class="st">'categories'</span>, []):</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Use 'title' if exists, otherwise use class_title or 'N/A'</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>            cat_title <span class="op">=</span> cat.get(<span class="st">'title'</span>, class_title <span class="cf">if</span> <span class="st">'title'</span> <span class="kw">in</span> cls <span class="cf">else</span> <span class="st">'N/A'</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            row <span class="op">=</span> {</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">'measure'</span>: measure_title, </span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">'class'</span>: class_title,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>                <span class="st">'category'</span>: cat_title</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> m <span class="kw">in</span> cat.get(<span class="st">'measurements'</span>, []):</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                row[<span class="ss">f"</span><span class="sc">{</span>m[<span class="st">'groupId'</span>]<span class="sc">}</span><span class="ss">_value"</span>] <span class="op">=</span> m.get(<span class="st">'value'</span>, <span class="dv">0</span>)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>            baseline_measures.append(row)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>baseline_df <span class="op">=</span> pd.DataFrame(baseline_measures)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>baseline_df.to_csv(<span class="st">'baseline_characteristics.csv'</span>, index<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Efficacy Outcomes</p>
+<div id="93257f07" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>outcomes <span class="op">=</span> []</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>outcome_module <span class="op">=</span> data.get(<span class="st">'resultsSection'</span>, {}).get(<span class="st">'outcomeMeasuresModule'</span>, {}).get(<span class="st">'outcomeMeasures'</span>, {})</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> outcome <span class="kw">in</span> outcome_module:</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    row <span class="op">=</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">'outcome_type'</span>: outcome.get(<span class="st">'type'</span>, <span class="st">'Other'</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'title'</span>: outcome.get(<span class="st">'title'</span>, <span class="st">'N/A'</span>)[:<span class="dv">120</span>],</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'time_frame'</span>: outcome.get(<span class="st">'timeFrame'</span>, <span class="st">'N/A'</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Extract from ALL found measurements</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> cls <span class="kw">in</span> outcome.get(<span class="st">'classes'</span>, []):</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> cat <span class="kw">in</span> cls.get(<span class="st">'categories'</span>, []):</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> m <span class="kw">in</span> cat.get(<span class="st">'measurements'</span>, []):</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                group_id <span class="op">=</span> m[<span class="st">'groupId'</span>]</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                param_type <span class="op">=</span> m.get(<span class="st">'paramType'</span>, <span class="st">'Mean'</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                row[<span class="ss">f"</span><span class="sc">{</span>group_id<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>param_type<span class="sc">}</span><span class="ss">_value"</span>] <span class="op">=</span> m.get(<span class="st">'value'</span>, <span class="dv">0</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>                row[<span class="ss">f"</span><span class="sc">{</span>group_id<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>param_type<span class="sc">}</span><span class="ss">_spread"</span>] <span class="op">=</span> m.get(<span class="st">'spread'</span>, <span class="dv">0</span>)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    outcomes.append(row)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>outcomes_df <span class="op">=</span> pd.DataFrame(outcomes)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>outcomes_df.to_csv(<span class="st">'efficacy_outcomes.csv'</span>, index<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Participant Flow</p>
+<div id="164c1938" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>flow_data <span class="op">=</span> []</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>participant_flow <span class="op">=</span> data.get(<span class="st">'resultsSection'</span>, {}).get(<span class="st">'participantFlowModule'</span>, {})</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>periods <span class="op">=</span> participant_flow.get(<span class="st">'periods'</span>, [])</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> periods:</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> milestone <span class="kw">in</span> periods[<span class="dv">0</span>].get(<span class="st">'milestones'</span>, []):</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> ach <span class="kw">in</span> milestone.get(<span class="st">'achievements'</span>, []):</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>            flow_data.append({</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                <span class="st">'milestone'</span>: milestone.get(<span class="st">'type'</span>, <span class="st">'N/A'</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                <span class="st">'group'</span>: ach.get(<span class="st">'groupId'</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                <span class="st">'n_subjects'</span>: ach.get(<span class="st">'numSubjects'</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>            })</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>flow_df <span class="op">=</span> pd.DataFrame(flow_data)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>flow_df.to_csv(<span class="st">'participant_flow.csv'</span>, index<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Adverse Events</p>
+<div id="f7fceaeb" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>adverse_events <span class="op">=</span> []</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>adverse_module <span class="op">=</span> data.get(<span class="st">'resultsSection'</span>, {}).get(<span class="st">'adverseEventsModule'</span>, {})</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> event_list <span class="kw">in</span> [<span class="st">'seriousEvents'</span>, <span class="st">'otherEvents'</span>]:</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    events <span class="op">=</span> adverse_module.get(event_list, [])</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> event <span class="kw">in</span> events:</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        row <span class="op">=</span> {</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">'term'</span>: event.get(<span class="st">'term'</span>, <span class="st">'N/A'</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">'organ_system'</span>: event.get(<span class="st">'organSystem'</span>, <span class="st">'N/A'</span>),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">'event_type'</span>: event_list.replace(<span class="st">'Events'</span>, <span class="st">''</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> stat <span class="kw">in</span> event.get(<span class="st">'stats'</span>, []):</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>            group_id <span class="op">=</span> stat[<span class="st">'groupId'</span>]</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>            row[<span class="ss">f"</span><span class="sc">{</span>group_id<span class="sc">}</span><span class="ss">_affected"</span>] <span class="op">=</span> stat.get(<span class="st">'numAffected'</span>, <span class="dv">0</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            row[<span class="ss">f"</span><span class="sc">{</span>group_id<span class="sc">}</span><span class="ss">_at_risk"</span>] <span class="op">=</span> stat.get(<span class="st">'numAtRisk'</span>, <span class="dv">0</span>)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        adverse_events.append(row)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>adverse_df <span class="op">=</span> pd.DataFrame(adverse_events)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>adverse_df.to_csv(<span class="st">'adverse_events.csv'</span>, index<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></li>
+<li><p>Load the data and inspect for cleaning</p>
+<p>Inspection Function</p>
+<div id="3bd44878" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> print_overview(df):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Overview:"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df.head())</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df.info())</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df.describe())</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df.dtypes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Study Overview</p>
+<div id="e085acbe" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>study_df <span class="op">=</span> pd.read_csv(<span class="st">'study_overview.csv'</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>print_overview(study_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Overview:
+        nct_id                                        brief_title  enrollment  \
+0  NCT00830167  Randomized, Double-Blind, Placebo-Controlled S...         498   
+
+    phase                       arms  
+0  PHASE3  ['Placebo', 'Pregabalin']  
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 1 entries, 0 to 0
+Data columns (total 5 columns):
+ #   Column       Non-Null Count  Dtype 
+---  ------       --------------  ----- 
+ 0   nct_id       1 non-null      object
+ 1   brief_title  1 non-null      object
+ 2   enrollment   1 non-null      int64 
+ 3   phase        1 non-null      object
+ 4   arms         1 non-null      object
+dtypes: int64(1), object(4)
+memory usage: 172.0+ bytes
+None
+       enrollment
+count         1.0
+mean        498.0
+std           NaN
+min         498.0
+25%         498.0
+50%         498.0
+75%         498.0
+max         498.0
+nct_id         object
+brief_title    object
+enrollment      int64
+phase          object
+arms           object
+dtype: object</code></pre>
+</div>
+</div>
+<p>Baseline Characteristics</p>
+<div id="3b9b1814" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>baseline_df <span class="op">=</span> pd.read_csv(<span class="st">'baseline_characteristics.csv'</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename columns for groups</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>baseline_df.rename(columns<span class="op">=</span>{<span class="st">'BG000_value'</span>:<span class="st">'n_placebo'</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'BG001_value'</span>:<span class="st">'n_pregab'</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'BG002_value'</span>:<span class="st">'n_total'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>print_overview(baseline_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Overview:
+             measure                          class  \
+0    Age, Customized                      &lt;18 years   
+1    Age, Customized  Between 18 years and 44 years   
+2    Age, Customized  Between 45 years and 64 years   
+3    Age, Customized                     &gt;=65 years   
+4  Sex: Female, Male                  Unknown Class   
+
+                        category  n_placebo  n_pregab  n_total  
+0                      &lt;18 years          0         0        0  
+1  Between 18 years and 44 years        104       101      205  
+2  Between 45 years and 64 years        123       125      248  
+3                     &gt;=65 years         21        24       45  
+4                         Female        217       226      443  
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 6 entries, 0 to 5
+Data columns (total 6 columns):
+ #   Column     Non-Null Count  Dtype 
+---  ------     --------------  ----- 
+ 0   measure    6 non-null      object
+ 1   class      6 non-null      object
+ 2   category   6 non-null      object
+ 3   n_placebo  6 non-null      int64 
+ 4   n_pregab   6 non-null      int64 
+ 5   n_total    6 non-null      int64 
+dtypes: int64(3), object(3)
+memory usage: 420.0+ bytes
+None
+        n_placebo    n_pregab     n_total
+count    6.000000    6.000000    6.000000
+mean    82.666667   83.333333  166.000000
+std     81.772041   85.308069  167.028141
+min      0.000000    0.000000    0.000000
+25%     23.500000   24.000000   47.500000
+50%     67.500000   62.500000  130.000000
+75%    118.250000  119.000000  237.250000
+max    217.000000  226.000000  443.000000
+measure      object
+class        object
+category     object
+n_placebo     int64
+n_pregab      int64
+n_total       int64
+dtype: object</code></pre>
+</div>
+</div>
+<p>Efficacy Outcomes</p>
+<div id="3f5b96d9" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>outcomes_df <span class="op">=</span> pd.read_csv(<span class="st">'efficacy_outcomes.csv'</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename columns for groups</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>outcomes_df.rename(columns<span class="op">=</span>{<span class="st">'OG000_Mean_value'</span>:<span class="st">'placebo_mean_change'</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'OG001_Mean_value'</span>:<span class="st">'pregab_mean_change'</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'OG000_Mean_spread'</span>:<span class="st">'placebo_sd'</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'OG001_Mean_spread'</span>:<span class="st">'pregab_sd'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate difference in means</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>outcomes_df[<span class="st">'mean_difference'</span>] <span class="op">=</span> outcomes_df[<span class="st">'pregab_mean_change'</span>] <span class="op">-</span> outcomes_df[<span class="st">'placebo_mean_change'</span>]</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate pooled standard deviation</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>outcomes_df[<span class="st">'pooled_sd'</span>] <span class="op">=</span> ((outcomes_df[<span class="st">'placebo_sd'</span>] <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> outcomes_df[<span class="st">'pregab_sd'</span>] <span class="op">**</span> <span class="dv">2</span>) <span class="op">/</span> <span class="dv">2</span>) <span class="op">**</span> <span class="fl">0.5</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate effect size (Cohen's d)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>outcomes_df[<span class="st">'effect_size'</span>] <span class="op">=</span> outcomes_df[<span class="st">'mean_difference'</span>] <span class="op">/</span> outcomes_df[<span class="st">'pooled_sd'</span>]</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate relative difference</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>outcomes_df[<span class="st">'relative_difference'</span>] <span class="op">=</span> outcomes_df[<span class="st">'mean_difference'</span>] <span class="op">/</span> outcomes_df[<span class="st">'placebo_mean_change'</span>]</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>print_overview(outcomes_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Overview:
+  outcome_type                                              title  \
+0      PRIMARY  Change From Baseline for Numerical Rating Scal...   
+1    SECONDARY  Percentage of Participants Who Was Categorized...   
+2    SECONDARY  Change From Baseline in Medical Outcomes Study...   
+3    SECONDARY  Change From Baseline in Medical Outcomes Study...   
+4    SECONDARY  Change From Baseline in Medical Outcomes Study...   
+
+                                   time_frame  placebo_mean_change  \
+0  Baseline, Week 15 or study discontinuation                -1.03   
+1            Week 15 or study discontinuation                62.10   
+2  Baseline, Week 15 or study discontinuation                -8.13   
+3  Baseline, Week 15 or study discontinuation                -1.61   
+4  Baseline, Week 15 or study discontinuation                -3.02   
+
+   placebo_sd  pregab_mean_change  pregab_sd  mean_difference  pooled_sd  \
+0        0.12               -1.48       0.12            -0.45       0.12   
+1        0.00               70.00       0.00             7.90       0.00   
+2        1.31              -17.62       1.31            -9.49       1.31   
+3        1.33                3.37       1.33             4.98       1.33   
+4        1.36               -8.01       1.36            -4.99       1.36   
+
+   effect_size  relative_difference  
+0    -3.750000             0.436893  
+1          inf             0.127214  
+2    -7.244275             1.167282  
+3     3.744361            -3.093168  
+4    -3.669118             1.652318  
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 33 entries, 0 to 32
+Data columns (total 11 columns):
+ #   Column               Non-Null Count  Dtype  
+---  ------               --------------  -----  
+ 0   outcome_type         33 non-null     object 
+ 1   title                33 non-null     object 
+ 2   time_frame           33 non-null     object 
+ 3   placebo_mean_change  33 non-null     float64
+ 4   placebo_sd           33 non-null     float64
+ 5   pregab_mean_change   33 non-null     float64
+ 6   pregab_sd            33 non-null     float64
+ 7   mean_difference      33 non-null     float64
+ 8   pooled_sd            33 non-null     float64
+ 9   effect_size          33 non-null     float64
+ 10  relative_difference  33 non-null     float64
+dtypes: float64(8), object(3)
+memory usage: 3.0+ KB
+None
+       placebo_mean_change  placebo_sd  pregab_mean_change  pregab_sd  \
+count            33.000000   33.000000           33.000000  33.000000   
+mean              3.405758    0.649091            4.502424   0.646667   
+std              14.835537    0.564598           18.652840   0.561864   
+min             -14.110000    0.000000          -20.300000   0.000000   
+25%              -1.030000    0.150000           -1.460000   0.150000   
+50%              -0.510000    0.200000           -0.470000   0.200000   
+75%               3.500000    1.290000            6.650000   1.280000   
+max              62.100000    1.450000           71.000000   1.440000   
+
+       mean_difference  pooled_sd  effect_size  relative_difference  
+count        33.000000  33.000000    33.000000            33.000000  
+mean          1.096667   0.647881          inf                 -inf  
+std           4.966931   0.563231          NaN                  NaN  
+min          -9.490000   0.000000    -7.244275                 -inf  
+25%          -0.490000   0.150000    -3.130847             0.200957  
+50%          -0.230000   0.200000    -1.000000             0.437500  
+75%           2.150000   1.285010     2.693878             0.861328  
+max          18.000000   1.445009          inf             5.333333  
+outcome_type            object
+title                   object
+time_frame              object
+placebo_mean_change    float64
+placebo_sd             float64
+pregab_mean_change     float64
+pregab_sd              float64
+mean_difference        float64
+pooled_sd              float64
+effect_size            float64
+relative_difference    float64
+dtype: object</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>C:\Users\levif\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\core\nanops.py:1016: RuntimeWarning: invalid value encountered in subtract
+  sqr = _ensure_numeric((avg - values) ** 2)
+C:\Users\levif\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\core\nanops.py:1016: RuntimeWarning: invalid value encountered in subtract
+  sqr = _ensure_numeric((avg - values) ** 2)</code></pre>
+</div>
+</div>
+<p>Participant Flow</p>
+<div id="835ee5cb" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>flow_df <span class="op">=</span> pd.read_csv(<span class="st">'participant_flow.csv'</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>print_overview(flow_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Overview:
+       milestone  group  n_subjects
+0        STARTED  FG000         248
+1        STARTED  FG001         250
+2      COMPLETED  FG000         208
+3      COMPLETED  FG001         207
+4  NOT COMPLETED  FG000          40
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 6 entries, 0 to 5
+Data columns (total 3 columns):
+ #   Column      Non-Null Count  Dtype 
+---  ------      --------------  ----- 
+ 0   milestone   6 non-null      object
+ 1   group       6 non-null      object
+ 2   n_subjects  6 non-null      int64 
+dtypes: int64(1), object(2)
+memory usage: 276.0+ bytes
+None
+       n_subjects
+count    6.000000
+mean   166.000000
+std     98.214052
+min     40.000000
+25%     84.000000
+50%    207.500000
+75%    238.000000
+max    250.000000
+milestone     object
+group         object
+n_subjects     int64
+dtype: object</code></pre>
+</div>
+</div>
+<p>Adverse Events</p>
+<div id="75decd23" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>adverse_df <span class="op">=</span> pd.read_csv(<span class="st">'adverse_events.csv'</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename columns for groups</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>adverse_df.rename(columns<span class="op">=</span>{<span class="st">'EG000_affected'</span>:<span class="st">'n_placebo_affected'</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'EG000_at_risk'</span>:<span class="st">'n_placebo_at_risk'</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'EG001_affected'</span>:<span class="st">'n_pregab_affected'</span>,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>                            <span class="st">'EG001_at_risk'</span>:<span class="st">'n_pregab_at_risk'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate risk</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>adverse_df[<span class="st">'risk_placebo'</span>] <span class="op">=</span> adverse_df[<span class="st">'n_placebo_affected'</span>] <span class="op">/</span> adverse_df[<span class="st">'n_placebo_at_risk'</span>]</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>adverse_df[<span class="st">'risk_pregab'</span>] <span class="op">=</span> adverse_df[<span class="st">'n_pregab_affected'</span>] <span class="op">/</span> adverse_df[<span class="st">'n_pregab_at_risk'</span>]</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate risk difference</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>adverse_df[<span class="st">'risk_difference'</span>] <span class="op">=</span> adverse_df[<span class="st">'risk_pregab'</span>] <span class="op">-</span> adverse_df[<span class="st">'risk_placebo'</span>]</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate relative risk</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>adverse_df[<span class="st">'relative_risk'</span>] <span class="op">=</span> adverse_df[<span class="st">'risk_pregab'</span>] <span class="op">/</span> adverse_df[<span class="st">'risk_placebo'</span>]</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate odds ratio</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>adverse_df[<span class="st">'odds_placebo'</span>] <span class="op">=</span> adverse_df[<span class="st">'n_placebo_affected'</span>] <span class="op">/</span> (adverse_df[<span class="st">'n_placebo_at_risk'</span>] <span class="op">-</span> adverse_df[<span class="st">'n_placebo_affected'</span>])</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>adverse_df[<span class="st">'odds_pregab'</span>] <span class="op">=</span> adverse_df[<span class="st">'n_pregab_affected'</span>] <span class="op">/</span> (adverse_df[<span class="st">'n_pregab_at_risk'</span>] <span class="op">-</span> adverse_df[<span class="st">'n_pregab_affected'</span>])</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>adverse_df[<span class="st">'odds_ratio'</span>] <span class="op">=</span> adverse_df[<span class="st">'odds_pregab'</span>] <span class="op">/</span> adverse_df[<span class="st">'odds_placebo'</span>]</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>print_overview(adverse_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Overview:
+                term                                       organ_system  \
+0      Breast cancer  Neoplasms benign, malignant and unspecified (i...   
+1     Vision blurred                                      Eye disorders   
+2       Constipation                         Gastrointestinal disorders   
+3   Feeling abnormal                                  General disorders   
+4  Oedema peripheral                                  General disorders   
+
+  event_type  n_placebo_affected  n_placebo_at_risk  n_pregab_affected  \
+0    serious                   0                248                  1   
+1      other                   3                248                 13   
+2      other                  17                248                 36   
+3      other                   3                248                 20   
+4      other                   3                248                 18   
+
+   n_pregab_at_risk  risk_placebo  risk_pregab  risk_difference  \
+0               250      0.000000        0.004         0.004000   
+1               250      0.012097        0.052         0.039903   
+2               250      0.068548        0.144         0.075452   
+3               250      0.012097        0.080         0.067903   
+4               250      0.012097        0.072         0.059903   
+
+   relative_risk  odds_placebo  odds_pregab  odds_ratio  
+0            inf      0.000000     0.004016         inf  
+1       4.298667      0.012245     0.054852    4.479606  
+2       2.100706      0.073593     0.168224    2.285871  
+3       6.613333      0.012245     0.086957    7.101449  
+4       5.952000      0.012245     0.077586    6.336207  
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 10 entries, 0 to 9
+Data columns (total 14 columns):
+ #   Column              Non-Null Count  Dtype  
+---  ------              --------------  -----  
+ 0   term                10 non-null     object 
+ 1   organ_system        10 non-null     object 
+ 2   event_type          10 non-null     object 
+ 3   n_placebo_affected  10 non-null     int64  
+ 4   n_placebo_at_risk   10 non-null     int64  
+ 5   n_pregab_affected   10 non-null     int64  
+ 6   n_pregab_at_risk    10 non-null     int64  
+ 7   risk_placebo        10 non-null     float64
+ 8   risk_pregab         10 non-null     float64
+ 9   risk_difference     10 non-null     float64
+ 10  relative_risk       10 non-null     float64
+ 11  odds_placebo        10 non-null     float64
+ 12  odds_pregab         10 non-null     float64
+ 13  odds_ratio          10 non-null     float64
+dtypes: float64(7), int64(4), object(3)
+memory usage: 1.2+ KB
+None
+       n_placebo_affected  n_placebo_at_risk  n_pregab_affected  \
+count           10.000000               10.0           10.00000   
+mean            15.500000              248.0           37.70000   
+std             16.648323                0.0           34.44819   
+min              0.000000              248.0            1.00000   
+25%              3.000000              248.0           15.75000   
+50%             12.000000              248.0           28.00000   
+75%             16.500000              248.0           43.50000   
+max             45.000000              248.0          116.00000   
+
+       n_pregab_at_risk  risk_placebo  risk_pregab  risk_difference  \
+count              10.0     10.000000    10.000000        10.000000   
+mean              250.0      0.062500     0.150800         0.088300   
+std                 0.0      0.067130     0.137793         0.098413   
+min               250.0      0.000000     0.004000        -0.001452   
+25%               250.0      0.012097     0.063000         0.012976   
+50%               250.0      0.048387     0.112000         0.063903   
+75%               250.0      0.066532     0.174000         0.108645   
+max               250.0      0.181452     0.464000         0.282548   
+
+       relative_risk  odds_placebo  odds_pregab  odds_ratio  
+count      10.000000     10.000000    10.000000   10.000000  
+mean             inf      0.072009     0.214594         inf  
+std              NaN      0.082999     0.257551         NaN  
+min         0.992000      0.000000     0.004016    0.990244  
+25%         2.214818      0.012245     0.067269    2.690689  
+50%         4.298667      0.051017     0.127590    4.693990  
+75%         5.687467      0.071289     0.210843    6.482347  
+max              inf      0.221675     0.865672         inf  
+term                   object
+organ_system           object
+event_type             object
+n_placebo_affected      int64
+n_placebo_at_risk       int64
+n_pregab_affected       int64
+n_pregab_at_risk        int64
+risk_placebo          float64
+risk_pregab           float64
+risk_difference       float64
+relative_risk         float64
+odds_placebo          float64
+odds_pregab           float64
+odds_ratio            float64
+dtype: object</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>C:\Users\levif\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\core\nanops.py:1016: RuntimeWarning: invalid value encountered in subtract
+  sqr = _ensure_numeric((avg - values) ** 2)
+C:\Users\levif\AppData\Local\Programs\Python\Python313\Lib\site-packages\pandas\core\nanops.py:1016: RuntimeWarning: invalid value encountered in subtract
+  sqr = _ensure_numeric((avg - values) ** 2)</code></pre>
+</div>
+</div>
+<p>Files:</p>
+<ul>
+<li><p>study_overview.csv</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Col</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>nct_id</td>
+<td>String</td>
+<td>Unique ID</td>
+</tr>
+<tr class="even">
+<td>brief_title</td>
+<td>String</td>
+<td>Study title</td>
+</tr>
+<tr class="odd">
+<td>enrolment</td>
+<td>Integer</td>
+<td>Total participants randomised</td>
+</tr>
+<tr class="even">
+<td>phase</td>
+<td>String</td>
+<td>Trial Phase</td>
+</tr>
+<tr class="odd">
+<td>arms</td>
+<td>String array</td>
+<td>Treatment arms</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>baseline_characteristics.csv</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Col</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>measure</td>
+<td>String</td>
+<td>Characteristic measured</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td>String</td>
+<td>Grouping</td>
+</tr>
+<tr class="odd">
+<td>category</td>
+<td>String</td>
+<td>Subgroup</td>
+</tr>
+<tr class="even">
+<td>n_placebo</td>
+<td>Integer</td>
+<td>Placebo group size</td>
+</tr>
+<tr class="odd">
+<td>n_pregab</td>
+<td>Integer</td>
+<td>Pregabalin group size</td>
+</tr>
+<tr class="even">
+<td>n_total</td>
+<td>Integer</td>
+<td>Total both groups</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>efficacy_outcomes.csv</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Col</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>outcome_type</td>
+<td>String</td>
+<td>Primary/Secondary</td>
+</tr>
+<tr class="even">
+<td>title</td>
+<td>String</td>
+<td>Outcome name</td>
+</tr>
+<tr class="odd">
+<td>time_frame</td>
+<td>String</td>
+<td>Assessment period</td>
+</tr>
+<tr class="even">
+<td>placebo_mean_change</td>
+<td>Float</td>
+<td>Placebo mean change</td>
+</tr>
+<tr class="odd">
+<td>placebo_sd</td>
+<td>Float</td>
+<td>Placebo spread</td>
+</tr>
+<tr class="even">
+<td>pregab_mean_change</td>
+<td>Float</td>
+<td>Pregabalin mean change</td>
+</tr>
+<tr class="odd">
+<td>pregab_sd</td>
+<td>Float</td>
+<td>Pregabalin spread</td>
+</tr>
+<tr class="even">
+<td>mean_difference</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>pooled_sd</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>effect_size</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>relative_difference</td>
+<td>Float</td>
+<td></td>
+</tr>
+</tbody>
+</table></li>
+<li><p>participant_flow.csv</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Col</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>milestone</td>
+<td>String</td>
+<td>Flow stage</td>
+</tr>
+<tr class="even">
+<td>group</td>
+<td>String</td>
+<td>Arm identifier</td>
+</tr>
+<tr class="odd">
+<td>n_subjects</td>
+<td>Integer</td>
+<td>Participants at stage</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>adverse_events.csv</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Col</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>term</td>
+<td>String</td>
+<td>Adverse event name</td>
+</tr>
+<tr class="even">
+<td>organ_system</td>
+<td>String</td>
+<td>MedDRA system</td>
+</tr>
+<tr class="odd">
+<td>event_type</td>
+<td>String</td>
+<td>Serious/Other</td>
+</tr>
+<tr class="even">
+<td>n_placebo_affected</td>
+<td>Integer</td>
+<td>Placebo cases</td>
+</tr>
+<tr class="odd">
+<td>n_placebo_at_risk</td>
+<td>Integer</td>
+<td>Placebo denominator</td>
+</tr>
+<tr class="even">
+<td>n_pregab_affected</td>
+<td>Integer</td>
+<td>Pregabalin cases</td>
+</tr>
+<tr class="odd">
+<td>n_pregab_at_risk</td>
+<td>Integer</td>
+<td>Pregabalin denominator</td>
+</tr>
+<tr class="even">
+<td>risk_placebo</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>risk_pregab</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>risk_difference</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>relative_risk</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>odds_placebo</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>odds_pregab</td>
+<td>Float</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>odds_ratio</td>
+<td>Float</td>
+<td></td>
+</tr>
+</tbody>
+</table></li>
+</ul></li>
+</ol>
+</section>
 
 </main>
 <!-- /main column -->
