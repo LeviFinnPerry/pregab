@@ -39,3 +39,28 @@ for measure in baseline_module.get('measures', []):
 
 baseline_df = pd.DataFrame(baseline_measures)
 baseline_df.to_csv('baseline_characteristics.csv', index=False)
+
+# 3. Efficacy outcomes
+outcomes = []
+outcome_module = data.get('resultsSection', {}).get('outcomeMeasuresModule', {}).get('outcomeMeasures', {})
+for outcome in outcome_module:
+    row = {
+        'outcome_type': outcome.get('type', 'Other'),
+        'title': outcome.get('title', 'N/A')[:120],
+        'time_frame': outcome.get('timeFrame', 'N/A')
+    }
+    
+    # Extract from ALL found measurements
+    for cls in outcome.get('classes', []):
+        for cat in cls.get('categories', []):
+            for m in cat.get('measurements', []):
+                group_id = m['groupId']
+                param_type = m.get('paramType', 'Mean')
+                row[f"{group_id}_{param_type}_value"] = m.get('value', '')
+                row[f"{group_id}_{param_type}_spread"] = m.get('spread', '')
+                row[f"{group_id}_units"] = m.get('units', '')
+                row[f"{group_id}_num_analyzed"] = m.get('numAnalyzed', '')
+    outcomes.append(row)
+    
+outcomes_df = pd.DataFrame(outcomes)
+outcomes_df.to_csv('efficacy_outcomes.csv', index=False)
