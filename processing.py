@@ -79,3 +79,22 @@ if periods:
             })
 flow_df = pd.DataFrame(flow_data)
 flow_df.to_csv('participant_flow.csv', index=False)
+
+# 5. Adverse events
+adverse_events = []
+adverse_module = data.get('resultsSection', {}).get('adverseEventsModule', {})
+for event_list in ['seriousEvents', 'otherEvents']:
+    events = adverse_module.get(event_list, [])
+    for event in events:
+        row = {
+            'term': event.get('term', 'N/A'),
+            'organ_system': event.get('organSystem', 'N/A'),
+            'event_type': event_list.replace('Events', '')
+        }
+        for stat in event.get('stats', []):
+            group_id = stat['groupId']
+            row[f"{group_id}_affected"] = stat.get('numAffected', 0)
+            row[f"{group_id}_at_risk"] = stat.get('numAtRisk', 0)
+        adverse_events.append(row)
+adverse_df = pd.DataFrame(adverse_events)
+adverse_df.to_csv('adverse_events.csv', index=False)

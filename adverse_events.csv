@@ -1,0 +1,11 @@
+term,organ_system,event_type,EG000_affected,EG000_at_risk,EG001_affected,EG001_at_risk
+Breast cancer,"Neoplasms benign, malignant and unspecified (incl cysts and polyps)",serious,0,248,1,250
+Vision blurred,Eye disorders,other,3,248,13,250
+Constipation,Gastrointestinal disorders,other,17,248,36,250
+Feeling abnormal,General disorders,other,3,248,20,250
+Oedema peripheral,General disorders,other,3,248,18,250
+Nasopharyngitis,Infections and infestations,other,45,248,45,250
+Weight increased,Investigations,other,9,248,39,250
+Dizziness,Nervous system disorders,other,15,248,74,250
+Headache,Nervous system disorders,other,15,248,15,250
+Somnolence,Nervous system disorders,other,45,248,116,250
