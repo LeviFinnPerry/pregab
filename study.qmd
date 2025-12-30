@@ -1,0 +1,60 @@
+# Steps
+
+1.  Download the file as a json format.
+
+2.  Process the content to break the study down into sections.
+
+    Files:
+
+    -   study_overview.csv
+
+        | Col         | Type         | Description                   |
+        |-------------|--------------|-------------------------------|
+        | nct_id      | String       | Unique ID                     |
+        | brief_title | String       | Study title                   |
+        | enrolment   | Integer      | Total participants randomised |
+        | phase       | String       | Trial Phase                   |
+        | arms        | String array | Treatment arms                |
+
+    -   baseline_characteristics.csv
+
+        | Col         | Type    | Description             |
+        |-------------|---------|-------------------------|
+        | measure     | String  | Characteristic measured |
+        | class       | String  | Grouping                |
+        | category    | String  | Subgroup                |
+        | BG000_value | Integer | Placebo arm value       |
+        | BG001_value | Integer | Pregabilin arm value    |
+        | BG002_value | Integer | Total of other values   |
+
+    -   efficacy_outcomes.csv
+
+        | Col               | Type   | Description            |
+        |-------------------|--------|------------------------|
+        | outcome_type      | String | Primary/Secondary      |
+        | title             | String | Outcome name           |
+        | time_frame        | String | Assessment period      |
+        | OG000_Mean_value  | Float  | Placebo mean change    |
+        | OG000_Mean_spread | Float  | Placebo spread         |
+        | OG001_Mean_value  | Float  | Pregabalin mean change |
+        | OG001_Mean_spread | Float  | Pregabalin spread      |
+
+    -   participant_flow.csv
+
+        | Col        | Type    | Description           |
+        |------------|---------|-----------------------|
+        | milestone  | String  | Flow stage            |
+        | group      | String  | Arm identifier        |
+        | n_subjects | Integer | Participants at stage |
+
+    -   adverse_events.csv
+
+        | Col            | Type    | Description            |
+        |----------------|---------|------------------------|
+        | term           | String  | Adverse event name     |
+        | organ_system   | String  | MedDRA system          |
+        | event_type     | String  | Serious/Other          |
+        | EG000_affected | Integer | Placebo cases          |
+        | EG000_at_risk  | Integer | Placebo denominator    |
+        | EG001_affected | Integer | Pregabalin cases       |
+        | EG001_at_risk  | Integer | Pregabalin denominator |

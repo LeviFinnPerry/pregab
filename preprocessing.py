@@ -33,8 +33,7 @@ for measure in baseline_module.get('measures', []):
                 'category': cat_title
             }
             for m in cat.get('measurements', []):
-                row[f"{m['groupId']}_value"] = m.get('value', '')
-                row[f"{m['groupId']}_units"] = m.get('units', '')
+                row[f"{m['groupId']}_value"] = m.get('value', 0)
             baseline_measures.append(row)
 
 baseline_df = pd.DataFrame(baseline_measures)
@@ -56,10 +55,10 @@ for outcome in outcome_module:
             for m in cat.get('measurements', []):
                 group_id = m['groupId']
                 param_type = m.get('paramType', 'Mean')
-                row[f"{group_id}_{param_type}_value"] = m.get('value', '')
-                row[f"{group_id}_{param_type}_spread"] = m.get('spread', '')
-                row[f"{group_id}_units"] = m.get('units', '')
-                row[f"{group_id}_num_analyzed"] = m.get('numAnalyzed', '')
+                row[f"{group_id}_{param_type}_value"] = m.get('value', 0)
+                row[f"{group_id}_{param_type}_spread"] = m.get('spread', 0)
+                
+                
     outcomes.append(row)
     
 outcomes_df = pd.DataFrame(outcomes)

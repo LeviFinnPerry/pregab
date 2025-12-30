@@ -1,2 +1,0 @@
-Download the file as a json format. 
-Process the content to break the study down into sections.

@@ -1,7 +1,7 @@
-measure,class,category,BG000_value,BG000_units,BG001_value,BG001_units,BG002_value,BG002_units
-"Age, Customized",<18 years,<18 years,0,,0,,0,
-"Age, Customized",Between 18 years and 44 years,Between 18 years and 44 years,104,,101,,205,
-"Age, Customized",Between 45 years and 64 years,Between 45 years and 64 years,123,,125,,248,
-"Age, Customized",>=65 years,>=65 years,21,,24,,45,
-"Sex: Female, Male",Unknown Class,Female,217,,226,,443,
-"Sex: Female, Male",Unknown Class,Male,31,,24,,55,
+measure,class,category,BG000_value,BG001_value,BG002_value
+"Age, Customized",<18 years,<18 years,0,0,0
+"Age, Customized",Between 18 years and 44 years,Between 18 years and 44 years,104,101,205
+"Age, Customized",Between 45 years and 64 years,Between 45 years and 64 years,123,125,248
+"Age, Customized",>=65 years,>=65 years,21,24,45
+"Sex: Female, Male",Unknown Class,Female,217,226,443
+"Sex: Female, Male",Unknown Class,Male,31,24,55
