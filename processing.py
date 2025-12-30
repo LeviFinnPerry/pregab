@@ -64,3 +64,18 @@ for outcome in outcome_module:
     
 outcomes_df = pd.DataFrame(outcomes)
 outcomes_df.to_csv('efficacy_outcomes.csv', index=False)
+
+# 4. Participant flow
+flow_data = []
+participant_flow = data.get('resultsSection', {}).get('participantFlowModule', {})
+periods = participant_flow.get('periods', [])
+if periods:
+    for milestone in periods[0].get('milestones', []):
+        for ach in milestone.get('achievements', []):
+            flow_data.append({
+                'milestone': milestone.get('type', 'N/A'),
+                'group': ach.get('groupId'),
+                'n_subjects': ach.get('numSubjects')
+            })
+flow_df = pd.DataFrame(flow_data)
+flow_df.to_csv('participant_flow.csv', index=False)
